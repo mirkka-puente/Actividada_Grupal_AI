@@ -20,10 +20,10 @@ classes <- read.csv(classes, sep = ";", header = FALSE, stringsAsFactors = TRUE)
 # Asignar el nombre de las columnas 
 
 colnames(gene_expression) <- column_names
-colnames(classes) <- c("sample", "class")
+colnames(classes) <- c("sample_ID", "class")
 
 # Add los sample numbers and class
-gene_expression$sample <- classes$sample  
+gene_expression$sample_ID <- classes$sample_ID  
 gene_expression$class <- classes$class  
 
 # Lista de paquetes necesarios
@@ -58,4 +58,10 @@ library(PRROC) # PR-Curve
 library(MASS) # LDA
 library(klaR) # RDA
 library(gridExtra) # juntar los gráficos
+
+# Existe NA en nuestros datos?
+cat("Total de NA en el dataset:", sum(is.na(gene_expression)), "\n")
+
+
+
 
