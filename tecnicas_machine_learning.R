@@ -121,6 +121,11 @@ df_genes <- gene_expression[, !names(gene_expression) %in% columnas_a_excluir]
 # Escalar Datos -- Usar esta data base para futuros analisis
 # Preprocesamiento en base de log
 datos_escalados <- log2(df_genes + 1) %>% scale()
+datos_escalados <- as.data.frame(datos_escalados)
+
+# Add los sample numbers and class
+datos_escalados$sample_ID <- classes$sample_ID  
+datos_escalados$class <- classes$class
 
 ##-----------------------------------------------------------------------
 #    Reduccion de dimensionalidad de datos - Métodos no supervisados 
