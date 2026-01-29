@@ -60,7 +60,7 @@ library(klaR) # RDA
 library(gridExtra) # juntar los gráficos
 
 # Existe NA en nuestros datos?
-cat("Total de NA en el dataset:", sum(is.na(gene_expression)), "\n")
+cat("Total de NAs:", sum(is.na(gene_expression)))
 
 
 
