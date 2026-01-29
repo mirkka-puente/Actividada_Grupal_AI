@@ -61,8 +61,10 @@ library(klaR) # RDA
 library(gridExtra) # juntar los gráficos
 library(dplyr)
 
+
 # Existe NA en nuestros datos?
 cat("Total de NAs:", sum(is.na(gene_expression)))
+
 
 ##--------------------------------------------------------------------
 #             Revision de normalidad de gene expression
@@ -108,7 +110,7 @@ columnas_a_excluir <- c("MIER3", "ZCCHC12", "RPL22L1", "sample_ID", "class")
 df_genes <- gene_expression[, !names(gene_expression) %in% columnas_a_excluir]
 
 ##--------------------------------------------------------------------
-#             Reduccion de dimensionalidad de datos
+#                      Escala de Datos
 ##--------------------------------------------------------------------
 
 # Porcentage de genes con distribucion normal
@@ -120,6 +122,9 @@ df_genes <- gene_expression[, !names(gene_expression) %in% columnas_a_excluir]
 # Preprocesamiento en base de log
 datos_escalados <- log2(df_genes + 1) %>% scale()
 
+##-----------------------------------------------------------------------
+#    Reduccion de dimensionalidad de datos - Métodos no supervisados 
+##-----------------------------------------------------------------------
 
 
 
