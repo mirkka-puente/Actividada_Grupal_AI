@@ -38,7 +38,8 @@ packs <- c(
   "PRROC",       # Precision-Recall Curve
   "MASS",        # LDA
   "klaR",        # RDA
-  "gridExtra"    # Combinar gráficos
+  "gridExtra",   # Combinar gráficos
+  "dplyr"
 )
 
 # Instalación en CRAN
@@ -58,10 +59,58 @@ library(PRROC) # PR-Curve
 library(MASS) # LDA
 library(klaR) # RDA
 library(gridExtra) # juntar los gráficos
+library(dplyr)
 
 # Existe NA en nuestros datos?
 cat("Total de NAs:", sum(is.na(gene_expression)))
 
+##--------------------------------------------------------------------
+#             Revision de normalidad de gene expression
+##--------------------------------------------------------------------
+
+prueba_shapiro<- lapply(column_names, function(g) {
+  
+  x <- as.numeric(gene_expression[[g]])
+  
+  if (length(na.omit(x)) < 3 || sd(x, na.rm = TRUE) == 0) {
+    return(data.frame(
+      gene = g,
+      W = NA,
+      p_value = NA
+    ))
+  }
+  
+  test <- shapiro.test(x)
+  
+  data.frame(
+    gene = g,
+    W = test$statistic,
+    p_value = test$p.value
+  )
+})
+
+shapiro_table <- bind_rows(prueba_shapiro) %>%
+  mutate(
+    normalidad = ifelse(p_value >= 0.05,
+                        "Normalidad",
+                        "No normalidad")
+  ) %>%
+  arrange(p_value)
+tail(shapiro_table)
+
+#Genes con resultado NA
+shapiro_table$gene[(is.na(shapiro_table$p_value))] #No cumple con requisitos de distribucion normal
+
+# Data set sin los genes que no cumplen requisitos y sin las columnas de sampleID y class para analisis
+
+df_genes <- gene_expression %>% select(-any_of(c("MIER3", "ZCCHC12", "RPL22L1", "sample_ID", "class")))
+
+
+
+# Porcentage de genes con distribucion normal
+(sum(shapiro_table$p_value >= 0.05, na.rm = TRUE)/nrow(shapiro_table))*100
+
+# Se recomienda trabajar con métodos no paramétricos como t-SNE o PCA con datos escalados
 
 
 
