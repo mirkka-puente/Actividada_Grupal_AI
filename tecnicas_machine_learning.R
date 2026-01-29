@@ -123,7 +123,7 @@ df_genes <- gene_expression[, !names(gene_expression) %in% columnas_a_excluir]
 datos_escalados <- log2(df_genes + 1) %>% scale()
 datos_escalados <- as.data.frame(datos_escalados)
 
-# Add los sample numbers and class
+# Add los sample numbers and class a los datos escalados
 datos_escalados$sample_ID <- classes$sample_ID  
 datos_escalados$class <- classes$class
 
