@@ -96,21 +96,33 @@ shapiro_table <- bind_rows(prueba_shapiro) %>%
                         "No normalidad")
   ) %>%
   arrange(p_value)
+
 tail(shapiro_table)
 
 #Genes con resultado NA
 shapiro_table$gene[(is.na(shapiro_table$p_value))] #No cumple con requisitos de distribucion normal
 
 # Data set sin los genes que no cumplen requisitos y sin las columnas de sampleID y class para analisis
+columnas_a_excluir <- c("MIER3", "ZCCHC12", "RPL22L1", "sample_ID", "class")
 
-df_genes <- gene_expression %>% select(-any_of(c("MIER3", "ZCCHC12", "RPL22L1", "sample_ID", "class")))
+df_genes <- gene_expression[, !names(gene_expression) %in% columnas_a_excluir]
 
-
+##--------------------------------------------------------------------
+#             Reduccion de dimensionalidad de datos
+##--------------------------------------------------------------------
 
 # Porcentage de genes con distribucion normal
 (sum(shapiro_table$p_value >= 0.05, na.rm = TRUE)/nrow(shapiro_table))*100
 
-# Se recomienda trabajar con métodos no paramétricos como t-SNE o PCA con datos escalados
+# >>> Se recomienda trabajar con métodos no paramétricos como t-SNE o PCA con datos escalados
+
+# Escalar Datos -- Usar esta data base para futuros analisis
+# Preprocesamiento en base de log
+datos_escalados <- log2(df_genes + 1) %>% scale()
+
+
+
+
 
 
 
