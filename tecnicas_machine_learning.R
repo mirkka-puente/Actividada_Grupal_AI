@@ -60,7 +60,7 @@ library(MASS) # LDA
 library(klaR) # RDA
 library(gridExtra) # juntar los gráficos
 library(dplyr)
-
+library(Rtsne) #Métodos no supervidados t-SNE
 
 # Existe NA en nuestros datos?
 cat("Total de NAs:", sum(is.na(gene_expression)))
@@ -128,9 +128,71 @@ datos_escalados$sample_ID <- classes$sample_ID
 datos_escalados$class <- classes$class
 
 ##-----------------------------------------------------------------------
-#    Reduccion de dimensionalidad de datos - Métodos no supervisados 
+#    Reduccion de dimensionalidad de datos - Métodos no supervisados
+##-----------------------------------------------------------------------
+##-----------------------------------------------------------------------
+#                                    PCA
 ##-----------------------------------------------------------------------
 
+# Excluimos sample_ID y class para el cálculo matemático
+columnas_no_numericas <- c("sample_ID", "class")
+data_pca <- datos_escalados[, !names(datos_escalados) %in% columnas_no_numericas]
+
+# Calculo PCA
+pca.results <- prcomp(data_pca, center = TRUE, scale. = FALSE) 
+
+# Resultados para el grafico.
+pca.df <- data.frame(pca.results$x)
+pca.df$class <- datos_escalados$class 
+
+# Varianza
+varianzas <- pca.results$sdev^2
+total.varianza <- sum(varianzas)
+varianza.explicada <- varianzas / total.varianza
+
+# Ejes
+x_label <- paste0('PC1 (', round(varianza.explicada[1] * 100, 2), '%)')
+y_label <- paste0('PC2 (', round(varianza.explicada[2] * 100, 2), '%)')
+
+# 5. Graficar PCA
+ggplot(pca.df, aes(x = PC1, y = PC2, color = class)) +
+  geom_point(size = 3, alpha = 0.8) + 
+  labs(title = 'PCA - Expresion Génica', x = x_label, y = y_label, color = 'Clase') +
+  theme_classic() +
+  theme(panel.grid.major = element_line(color = "gray90"), 
+        plot.title = element_text(hjust = 0.5))
+
+##--------------------------------------------------------------------
+#            t-Distributed Stochastic Neighbor Embedding (t-SNE)
+##--------------------------------------------------------------------
+
+# 1. Eliminacion posibles datos duplicados para t-SNE
+datos_tsne_clean <- datos_escalados %>% distinct()
+
+# Diferenciacion matriz numerica y etiquetado.
+matrix_tsne <- as.matrix(datos_tsne_clean[, !names(datos_tsne_clean) %in% columnas_no_numericas])
+labels_tsne <- datos_tsne_clean$class
+
+set.seed(1234) 
+
+# 3. Ejecución algoritmo t-SNE
+tsne_out <- Rtsne(X = matrix_tsne, 
+                  dims = 2, 
+                  check_duplicates = FALSE) # Ya los limpiamos arriba
+
+# 4. Dataframe para uso del ggplot.
+tsne_result <- data.frame(tsne_out$Y)
+colnames(tsne_result) <- c("Dim1", "Dim2")
+tsne_result$class <- labels_tsne # Añadimos las etiquetas correctas
+
+# 5. Graficar t-SNE
+ggplot(tsne_result, aes(x = Dim1, y = Dim2, color = class)) +
+  geom_point(size = 3, alpha = 0.8) +
+  labs(title = paste0("t-SNE - Datos expresion génica "), 
+                      x = "Dimensión 1", y = "Dimensión 2", color = "Clase") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(color = "gray90"), 
+        plot.title = element_text(hjust = 0.5))
 
 
 
