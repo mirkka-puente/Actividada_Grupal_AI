@@ -39,8 +39,11 @@ packs <- c(
   "MASS",        # LDA
   "klaR",        # RDA
   "gridExtra",   # Combinar gráficos
-  "dplyr"
+  "dplyr",       # Manipulación de datos
+  "Rtsne",       # Reduccion de dimensionalidad
+  "randomForest" # Machine Learnig 
 )
+
 
 # Instalación en CRAN
 #install.packages(packs, dependencies = TRUE)
@@ -60,7 +63,8 @@ library(MASS) # LDA
 library(klaR) # RDA
 library(gridExtra) # juntar los gráficos
 library(dplyr)
-library(Rtsne) #Métodos no supervidados t-SNE
+library(Rtsne)#Métodos no supervidados t-SNE
+library(randomForest) # Metodo supervisado
 
 # Existe NA en nuestros datos?
 cat("Total de NAs:", sum(is.na(gene_expression)))
@@ -194,7 +198,145 @@ ggplot(tsne_result, aes(x = Dim1, y = Dim2, color = class)) +
   theme(panel.grid.major = element_line(color = "gray90"), 
         plot.title = element_text(hjust = 0.5))
 
+##--------------------------------------------------------------------
+#                Métodos supervisados — Random Forest
+##--------------------------------------------------------------------
 
+set.seed(12345)  # Fijar semilla para que resultados sean reproducibles.
+
+# 1) Conjunto de modelado 
+#    - Filtramos columnas no numéricas y aseguramos la clase como factor.
+columnas_no_numericas <- c("sample_ID", "class")
+datos_modelo <- datos_escalados %>%
+  dplyr::select(-all_of("sample_ID")) %>%      # dejamos 'class' y los genes
+  dplyr::mutate(class = factor(class))
+
+# 2) Partición estratificada 80/20
+idx <- caret::createDataPartition(datos_modelo$class, p = 0.80, list = FALSE)
+train_df <- datos_modelo[idx, , drop = FALSE]
+test_df  <- datos_modelo[-idx, , drop = FALSE]
+
+# 3) Eliminar predictores de varianza ~0 usando SOLO el train, identifica genes con muy poca variación o muy pocos valores únicos.
+nzv_idx <- caret::nearZeroVar(train_df %>% dplyr::select(-class))
+if (length(nzv_idx) > 0) {
+  genes_keep <- setdiff(colnames(train_df), c("class"))[ -nzv_idx ]
+  train_df <- dplyr::select(train_df, dplyr::all_of(c("class", genes_keep)))
+  test_df  <- dplyr::select(test_df,  dplyr::all_of(c("class", genes_keep)))
+}
+
+# 4) (Opcional) Imputación mediana si hubiera NA. Para blindar el flujo por si aparece algún NA.
+pp <- caret::preProcess(train_df %>% dplyr::select(-class), method = c("medianImpute"))
+train_x <- predict(pp, train_df %>% dplyr::select(-class))
+test_x  <- predict(pp, test_df  %>% dplyr::select(-class))
+train_y <- train_df$class
+test_y  <- test_df$class
+
+# 5) Entrenamiento Random Forest con CV 5x2 y búsqueda simple de mtry
+p <- ncol(train_x)
+mtry_grid <- unique(pmax(1, round(c(sqrt(p)/2, sqrt(p), sqrt(p)*2))))
+
+ctrl <- caret::trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 2,
+  classProbs = FALSE,
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+set.seed(12345)
+rf_fit <- caret::train(
+  x = train_x, y = train_y,
+  method = "rf",
+  trControl = ctrl,
+  tuneGrid = data.frame(mtry = mtry_grid),
+  ntree = 1000,
+  importance = TRUE,
+  metric = "Accuracy"
+)
+
+print(rf_fit)
+cat("Mejor mtry seleccionado:", rf_fit$bestTune$mtry, "\n")
+
+# 6) Evaluación en test: Matriz de confusión y métricas.
+pred_test <- predict(rf_fit, newdata = test_x)
+cm <- caret::confusionMatrix(pred_test, test_y)
+cm
+
+# Extraer métricas pedidas
+accuracy <- unname(cm$overall["Accuracy"])
+byClass <- as.data.frame(cm$byClass)
+
+# F1 por clase = 2 * (PPV * Sens) / (PPV + Sens)
+if ("Pos Pred Value" %in% colnames(byClass)) {
+  byClass$F1 <- 2 * (byClass$Sensitivity * byClass$`Pos Pred Value`) /
+    pmax(byClass$Sensitivity + byClass$`Pos Pred Value`, .Machine$double.eps)
+} else {
+  byClass$F1 <- NA_real_
+}
+
+macro_metrics <- c(
+  Macro_Sensitivity = mean(byClass$Sensitivity, na.rm = TRUE),
+  Macro_Specificity = mean(byClass$Specificity, na.rm = TRUE),
+  Macro_Precision   = mean(byClass$`Pos Pred Value`, na.rm = TRUE),
+  Macro_F1          = mean(byClass$F1, na.rm = TRUE)
+)
+
+cat("\n===== RESULTADOS TEST (Random Forest) =====\n")
+cat(sprintf("Accuracy global: %.4f\n", accuracy))
+print(round(macro_metrics, 4))
+cat("\nMétricas por clase:\n")
+print(round(byClass[, c("Sensitivity","Specificity","Pos Pred Value","F1")], 4))
+
+# 7) Guardar salidas a disco
+readr::write_csv(as.data.frame(cm$table), "rf_confusion_matrix.csv")
+readr::write_csv(
+  tibble::tibble(Metric = names(macro_metrics), Value = as.numeric(macro_metrics)),
+  "rf_macro_metrics.csv"
+)
+
+# 8) Importancia de genes y gráfico Top 30 (versión robusta)
+vip_raw <- caret::varImp(rf_fit)$importance
+
+# Asegurar que es data.frame
+vip_tbl <- as.data.frame(vip_raw)
+
+# Si no existe 'Overall', lo creamos:
+if (!"Overall" %in% colnames(vip_tbl)) {
+  if (ncol(vip_tbl) > 1) {
+    # varias columnas (p. ej., una por clase) -> promedio como Overall
+    vip_tbl$Overall <- rowMeans(vip_tbl, na.rm = TRUE)
+  } else {
+    # una sola columna con otro nombre -> úsala como Overall
+    only_col <- colnames(vip_tbl)[1]
+    vip_tbl$Overall <- vip_tbl[[only_col]]
+  }
+}
+
+vip <- vip_tbl %>%
+  tibble::rownames_to_column("gene") %>%
+  dplyr::arrange(dplyr::desc(Overall))
+
+# Guardar tabla completa de importancias
+readr::write_csv(vip, "rf_feature_importance.csv")
+
+# Gráfico Top-30
+topN <- 30
+plt_rf <- vip %>%
+  dplyr::slice(1:topN) %>%
+  ggplot2::ggplot(ggplot2::aes(x = reorder(gene, Overall), y = Overall)) +
+  ggplot2::geom_col(fill = "#2a9d8f") +
+  ggplot2::coord_flip() +
+  ggplot2::labs(title = sprintf("Top %d genes más importantes (Random Forest)", topN),
+                x = "Gen", y = "Importancia (Overall)") +
+  ggplot2::theme_classic(base_size = 12)
+ggplot2::ggsave("rf_top_genes_importance.png", plt_rf, width = 7, height = 6, dpi = 300)
+
+plt_rf
+
+
+# 9) Guardar el modelo
+saveRDS(rf_fit, file = "rf_model.rds")
 
 
 
