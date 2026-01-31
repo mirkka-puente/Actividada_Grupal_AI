@@ -301,13 +301,12 @@ vip_raw <- caret::varImp(rf_fit)$importance
 # Asegurar que es data.frame
 vip_tbl <- as.data.frame(vip_raw)
 
-# Si no existe 'Overall', lo creamos:
 if (!"Overall" %in% colnames(vip_tbl)) {
   if (ncol(vip_tbl) > 1) {
     # varias columnas (p. ej., una por clase) -> promedio como Overall
     vip_tbl$Overall <- rowMeans(vip_tbl, na.rm = TRUE)
   } else {
-    # una sola columna con otro nombre -> úsala como Overall
+    # una sola columna 
     only_col <- colnames(vip_tbl)[1]
     vip_tbl$Overall <- vip_tbl[[only_col]]
   }
