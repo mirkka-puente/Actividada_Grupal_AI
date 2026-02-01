@@ -70,4 +70,3 @@ metrics_nb <- data.frame(
 )
 
 metrics_nb
-
