@@ -182,7 +182,7 @@ datos_tsne_clean <- datos_escalados %>% distinct()
 matrix_tsne <- as.matrix(datos_tsne_clean[, !names(datos_tsne_clean) %in% columnas_no_numericas])
 labels_tsne <- datos_tsne_clean$class
 
-set.seed(1234) 
+set.seed(1995) 
 
 # 3. Ejecución algoritmo t-SNE
 tsne_out <- Rtsne(X = matrix_tsne, 
@@ -211,7 +211,7 @@ ggplot(tsne_result, aes(x = Dim1, y = Dim2, color = class)) +
 ##--------------------------------------------------------------------
 
 # Dado que el dataset tiene 5 clases biológicas, usamos k=5
-set.seed(1234) 
+set.seed(1995) 
 kmeans_result <- kmeans(data_pca, centers = 5, iter.max = 100, nstart = 25)
 
 # Visualización del clustering 
@@ -261,7 +261,7 @@ table(Clúster_Jerárquico = grupos_hclust, Clase_Real = datos_escalados$class)
 #                       Método 1: Random Forest
 ##--------------------------------------------------------------------
 
-set.seed(12345)  # Fijar semilla para que resultados sean reproducibles.
+set.seed(1995)  # Fijar semilla para que resultados sean reproducibles.
 
 # 1) Conjunto de modelado 
 
@@ -305,7 +305,7 @@ ctrl <- caret::trainControl(
   allowParallel = TRUE
 )
 
-set.seed(12345)
+set.seed(1995)
 rf_fit <- caret::train(
   x = train_x, y = train_y,
   method = "rf",
@@ -490,7 +490,7 @@ df_model <- datos_escalados[, !names(datos_escalados) %in% c("sample_ID")]
 # División de Datos (Train / Test)
 # Se usa una partición 70% Entrenamiento - 30% Prueba
 set.seed(1995) # Semilla para reproducibilidad
-trainIndex <- createDataPartition(df_model$class, p = 0.7, list = FALSE)
+trainIndex <- createDataPartition(df_model$class, p = 0.8, list = FALSE)
 
 train_data <- df_model[trainIndex, ]
 test_data  <- df_model[-trainIndex, ]
