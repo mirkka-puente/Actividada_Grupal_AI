@@ -565,5 +565,13 @@ cat("F1-Score:       ", round(f1_global, 4), "\n")
 # Interpretación:
 # - F1-Score cercano a 1 indica un balance excelente entre precisión y sensibilidad.
 # - SVM Lineal suele separar muy bien clases en datos de expresión génica. 
+modelo_svm <- c(
+  Modelo        = "SVM (Kernel Lineal)",
+  Precision     = round(precision_global, 4),    
+  Sensibilidad  = round(sensibilidad_global, 4),
+  Especificidad = round(especificidad_global, 4),
+  F1_Score      = round(f1_global, 4)
+)
+modelo_svm
 
 # Fin del script  
