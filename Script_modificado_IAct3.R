@@ -368,4 +368,11 @@ kable(tabla_final)
 # Guardar
 write.csv(tabla_final, "Tabla_Comparativa_Modelos.csv", row.names = FALSE)
 
+# Aunque las tres técnicas demostraron un rendimiento sobresaliente (F1-Score > 0.97 en todos los casos), 
+# el SVM con Kernel Lineal resultó ser el modelo superior para este conjunto de datos, logrando una 
+# clasificación perfecta sin errores. Esto indica que la frontera de decisión entre los tipos de cáncer 
+# es linealmente separable en el espacio de genes proporcionado. 
+# Random Forest se posiciona como la segunda mejor opción, ofreciendo una alta interpretabilidad 
+# biológica, mientras que Naive Bayes, pese a ser el de menor rendimiento relativo, 
+# sigue siendo una opción válida por su eficiencia. 
 
