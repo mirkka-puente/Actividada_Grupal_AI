@@ -566,23 +566,4 @@ cat("F1-Score:       ", round(f1_global, 4), "\n")
 # - F1-Score cercano a 1 indica un balance excelente entre precisión y sensibilidad.
 # - SVM Lineal suele separar muy bien clases en datos de expresión génica. 
 
-
-# --- CREACIÓN DE LA TABLA COMPARATIVA FINAL (SUPERVISADO) ---
-
-#  Definimos los resultados del modelo SVM
-# Métricas globales salieron 1.0000, las ponemos directas.
-modelo_svm <- c(
-  Modelo        = "SVM (Kernel Lineal)",
-  Precision     = round(precision_global, 4),    
-  Sensibilidad  = round(sensibilidad_global, 4),
-  Especificidad = round(especificidad_global, 4),
-  F1_Score      = round(f1_global, 4)
-)
-
-
-#Unir todo en un solo Dataframe
-#tabla_comparativa <- rbind(modelo_svm, modelo_rf, modelo_otro)
-#tabla_comparativa <- as.data.frame(tabla_comparativa)
-tabla_comparativa <- as.data.frame(modelo_svm)
-
 # Fin del script  
