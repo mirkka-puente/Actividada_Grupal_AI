@@ -132,10 +132,10 @@ datos_escalados$sample_ID <- classes$sample_ID
 datos_escalados$class <- classes$class
 
 ##-----------------------------------------------------------------------
-#    Reduccion de dimensionalidad de datos - Métodos no supervisados
+#    1. Métodos no supervisados - Reduccion de dimensionalidad de datos 
 ##-----------------------------------------------------------------------
 ##-----------------------------------------------------------------------
-#                                    PCA
+#                        Método 1: PCA
 ##-----------------------------------------------------------------------
 
 # Excluimos sample_ID y class para el cálculo matemático
@@ -167,7 +167,7 @@ ggplot(pca.df, aes(x = PC1, y = PC2, color = class)) +
         plot.title = element_text(hjust = 0.5))
 
 ##--------------------------------------------------------------------
-#            t-Distributed Stochastic Neighbor Embedding (t-SNE)
+#    Método 2: t-Distributed Stochastic Neighbor Embedding (t-SNE)
 ##--------------------------------------------------------------------
 
 # 1. Eliminacion posibles datos duplicados para t-SNE
@@ -198,7 +198,7 @@ ggplot(tsne_result, aes(x = Dim1, y = Dim2, color = class)) +
   theme(panel.grid.major = element_line(color = "gray90"), 
         plot.title = element_text(hjust = 0.5))
 ##--------------------------------------------------------------------
-#           Métodos de Clusterización (Aprendizaje No Supervisado)
+#         2.  Métodos no spuervisado - Clusterización
 ##--------------------------------------------------------------------
 
 ##--------------------------------------------------------------------
@@ -250,7 +250,10 @@ table(Clúster_Jerárquico = grupos_hclust, Clase_Real = datos_escalados$class)
 
 
 ##--------------------------------------------------------------------
-#                Métodos supervisados — Random Forest
+#                     3. Métodos supervisados  
+##--------------------------------------------------------------------
+##--------------------------------------------------------------------
+#                       Método 1: Random Forest
 ##--------------------------------------------------------------------
 
 set.seed(12345)  # Fijar semilla para que resultados sean reproducibles.
@@ -389,7 +392,7 @@ plt_rf
 saveRDS(rf_fit, file = "rf_model.rds")
 
 ##-----------------------------------------------------------------------
-#            MÉTODO SUPERVISADO - Naive Bayes
+#            Método 2: - Naive Bayes
 ##-----------------------------------------------------------------------
 
 # Usamos los datos ya escalados (datos procesados/limpios)
