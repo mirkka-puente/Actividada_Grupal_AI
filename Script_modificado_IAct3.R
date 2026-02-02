@@ -169,7 +169,7 @@ table(Clúster_Jerárquico = grupos_hclust, Clase_Real = datos_escalados$class)
 ##--------------------------------------------------------------------
 
 # ====================================================================
-# DIVISIÓN DE DATOS UNIFICADA (GLOBAL 80/20)
+# DIVISIÓN DE DATOS (80/20)
 # ====================================================================
 # Quitamos sample_ID para modelado
 datos_modelo <- datos_escalados %>%
@@ -262,7 +262,7 @@ print(plt_rf)
 
 
 ##-----------------------------------------------------------------------
-#            Método 2: - Naive Bayes (Corregido y Unificado)
+#                           Método 2: - Naive Bayes
 ##-----------------------------------------------------------------------
 
 # 1) Usamos los datos globales
@@ -344,7 +344,7 @@ print(cm_svm$table)
 
 
 ##-----------------------------------------------------------------------
-#               TABLA COMPARATIVA FINAL
+#                          TABLA COMPARATIVA FINAL
 ##-----------------------------------------------------------------------
 
 df_rf  <- as.data.frame(t(rf_metrics_vector))
@@ -359,3 +359,4 @@ kable(tabla_final)
 
 # Guardar
 write.csv(tabla_final, "Tabla_Comparativa_Modelos.csv", row.names = FALSE)
+
