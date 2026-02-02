@@ -198,7 +198,7 @@ ggplot(tsne_result, aes(x = Dim1, y = Dim2, color = class)) +
   theme(panel.grid.major = element_line(color = "gray90"), 
         plot.title = element_text(hjust = 0.5))
 ##--------------------------------------------------------------------
-#         2.  Métodos no spuervisado - Clusterización
+#         2.  Métodos no supervisados - Clusterización
 ##--------------------------------------------------------------------
 
 ##--------------------------------------------------------------------
