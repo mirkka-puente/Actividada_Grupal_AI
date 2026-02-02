@@ -1,3 +1,9 @@
+######################################################
+#      ACT 3: APREDIZAJE AUTOMÁTICO                  #
+#    GRUPO 22: Laura Córdova, Xiomira Fiallos,       #
+#  Lizbeth Navarrete, Soledad Ortega,                #
+#  Mirkka Puente, Melanie Polo.                      #
+###################################################### 
 
 ##--------------------------------------------------------------------
 #             Limpieza, imputación, exploración de datos
