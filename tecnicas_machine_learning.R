@@ -41,9 +41,11 @@ packs <- c(
   "gridExtra",   # Combinar gráficos
   "dplyr",       # Manipulación de datos
   "Rtsne",       # Reduccion de dimensionalidad
-  "randomForest" # Machine Learnig 
+  "randomForest", # Machine Learnig 
+  "factoextra",
+  "lattice",
+  "klaR"
 )
-
 
 # Instalación en CRAN
 #install.packages(packs, dependencies = TRUE)
@@ -65,6 +67,9 @@ library(gridExtra) # juntar los gráficos
 library(dplyr)
 library(Rtsne)#Métodos no supervidados t-SNE
 library(randomForest) # Metodo supervisado
+library(factoextra)
+library(lattice)
+library(klaR)
 
 # Existe NA en nuestros datos?
 cat("Total de NAs:", sum(is.na(gene_expression)))
@@ -259,11 +264,13 @@ table(Clúster_Jerárquico = grupos_hclust, Clase_Real = datos_escalados$class)
 set.seed(12345)  # Fijar semilla para que resultados sean reproducibles.
 
 # 1) Conjunto de modelado 
+
 #    - Filtramos columnas no numéricas y aseguramos la clase como factor.
 columnas_no_numericas <- c("sample_ID", "class")
 datos_modelo <- datos_escalados %>%
   dplyr::select(-all_of("sample_ID")) %>%      # dejamos 'class' y los genes
   dplyr::mutate(class = factor(class))
+
 
 # 2) Partición estratificada 80/20
 idx <- caret::createDataPartition(datos_modelo$class, p = 0.80, list = FALSE)
@@ -404,6 +411,7 @@ data_sup$class <- as.factor(data_sup$class)
 # Quitamos sample_ID porque no es predictor
 data_sup <- data_sup[, !names(data_sup) %in% c("sample_ID")]
 
+
 # Dividir en entrenamiento (80%) y prueba (20%)
 set.seed(1995)
 trainIndex <- createDataPartition(data_sup$class, p = 0.8, list = FALSE)
@@ -433,8 +441,6 @@ X_test <- testData[, orig_names, drop = FALSE]
 colnames(X_test) <- safe_names
 
 # Entrenar Naive Bayes
-library(klaR)
-library(caret)
 
 nb_model <- klaR::NaiveBayes(
   x = X_train,
@@ -567,22 +573,6 @@ modelo_svm <- c(
   F1_Score      = round(f1_global, 4)
 )
 
-###AGREGAR SUS MODELOS
-#modelo_rf <- c(
-#Modelo        = "Random Forest",
-#Precision     = NA, 
-#Sensibilidad  = NA, 
-#Especificidad = NA, 
-#F1_Score      = NA
-#)
-
-#modelo_otro <- c(
-#  Modelo        = "KNN / Otro",  # Cambiar por el nombre real
-#  Precision     = NA, 
-#  Sensibilidad  = NA, 
-#  Especificidad = NA, 
-#  F1_Score      = NA
-#)
 
 #Unir todo en un solo Dataframe
 #tabla_comparativa <- rbind(modelo_svm, modelo_rf, modelo_otro)
