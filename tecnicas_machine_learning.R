@@ -465,7 +465,7 @@ metrics_nb <- data.frame(
 metrics_nb
 
 ##-----------------------------------------------------------------------
-#   METODO 2: SVM (Support Vector Machine) + MÉTRICAS
+#   Método 3: SVM (Support Vector Machine) + MÉTRICAS
 ##-----------------------------------------------------------------------
 
 #SVM es excelente encontrando el "hiperplano" (la línea divisoria) óptima en espacios con muchas dimensiones
@@ -588,3 +588,5 @@ modelo_svm <- c(
 #tabla_comparativa <- rbind(modelo_svm, modelo_rf, modelo_otro)
 #tabla_comparativa <- as.data.frame(tabla_comparativa)
 tabla_comparativa <- as.data.frame(modelo_svm)
+
+# Fin del script  
