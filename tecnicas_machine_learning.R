@@ -464,3 +464,127 @@ metrics_nb <- data.frame(
 
 metrics_nb
 
+##-----------------------------------------------------------------------
+#   METODO 2: SVM (Support Vector Machine) + MÉTRICAS
+##-----------------------------------------------------------------------
+
+#SVM es excelente encontrando el "hiperplano" (la línea divisoria) óptima en espacios con muchas dimensiones
+#Busca maximizar el margen de separación entre clases, lo que lo hace robusto y generaliza bien.
+#Nota: Es obligatorio escalar los datos (StandardScaler)
+
+# Carga de librería específica para SVM
+if(!require(e1071)) install.packages("e1071")
+library(e1071)
+
+# Preparación del Dataset para el Modelo
+# Se elimina la columna sample_ID ya que no aporta información biológica predictiva
+# y podría causar sobreajuste ya que solo memorizaría los IDs en lugar de aprender de los genes.
+df_model <- datos_escalados[, !names(datos_escalados) %in% c("sample_ID")]
+
+# División de Datos (Train / Test)
+# Se usa una partición 70% Entrenamiento - 30% Prueba
+set.seed(1995) # Semilla para reproducibilidad
+trainIndex <- createDataPartition(df_model$class, p = 0.7, list = FALSE)
+
+train_data <- df_model[trainIndex, ]
+test_data  <- df_model[-trainIndex, ]
+
+cat("\nDimensiones del set de Entrenamiento:", dim(train_data))
+cat("\nDimensiones del set de Prueba:", dim(test_data), "\n")
+
+# Entrenamiento del Modelo SVM
+# Se utiliza un Kernel Lineal, ideal para datos de alta dimensionalidad (muchos genes)
+print("Entrenando modelo SVM")
+svm_model <- svm(class ~ ., 
+                 data = train_data, 
+                 kernel = "linear", 
+                 cost = 1,      # Penalización estándar
+                 scale = FALSE) # Los datos ya vienen escalados de la fase anterior
+
+
+# Predicción y Evaluación
+# Predicción sobre datos nuevos (Test set)
+svm_pred <- predict(svm_model, newdata = test_data)
+
+# Generación de la Matriz de Confusión
+# Se asume que la clase de interés (positiva) es la primera o la patológica.
+# caret detecta automáticamente los niveles, pero se puede forzar 'positive'
+cm_svm <- confusionMatrix(data = svm_pred, 
+                          reference = test_data$class)
+
+# Visualización de Resultados
+cat("\n-------------------------------------------")
+cat("\n RESULTADOS DEL MODELO SVM (SUPERVISADO)")
+cat("\n-------------------------------------------\n")
+
+cm_svm
+
+
+cat("\n-------------------------------------------")
+cat("\n MATRIZ DE CONFUSIÓN DEL MODELO SVM (SUPERVISADO)")
+cat("\n-------------------------------------------\n")
+
+print(cm_svm$table)
+
+# Extracción de métricas para Múltiples Clases
+metricas <- cm_svm$byClass
+
+cat("\n--- Métricas de Desempeño (Promedio Global) ---\n")
+
+# Como metricas es una matriz, accedemos a la columna [ , "NombreColumna"]
+# y calculamos la media (mean) para tener un solo número representativo.
+
+# Precisión
+precision_global <- mean(metricas[, "Precision"], na.rm = TRUE)
+cat("Precisión:      ", round(precision_global, 4), "\n")
+
+# Sensibilidad
+sensibilidad_global <- mean(metricas[, "Sensitivity"], na.rm = TRUE)
+cat("Sensibilidad:   ", round(sensibilidad_global, 4), "\n")
+
+# Especificidad
+especificidad_global <- mean(metricas[, "Specificity"], na.rm = TRUE)
+cat("Especificidad:  ", round(especificidad_global, 4), "\n")
+
+# F1-Score
+f1_global <- mean(metricas[, "F1"], na.rm = TRUE)
+cat("F1-Score:       ", round(f1_global, 4), "\n")
+
+# Interpretación:
+# - F1-Score cercano a 1 indica un balance excelente entre precisión y sensibilidad.
+# - SVM Lineal suele separar muy bien clases en datos de expresión génica. 
+
+
+# --- CREACIÓN DE LA TABLA COMPARATIVA FINAL (SUPERVISADO) ---
+
+#  Definimos los resultados del modelo SVM
+# Métricas globales salieron 1.0000, las ponemos directas.
+modelo_svm <- c(
+  Modelo        = "SVM (Kernel Lineal)",
+  Precision     = round(precision_global, 4),    
+  Sensibilidad  = round(sensibilidad_global, 4),
+  Especificidad = round(especificidad_global, 4),
+  F1_Score      = round(f1_global, 4)
+)
+
+###AGREGAR SUS MODELOS
+#modelo_rf <- c(
+#Modelo        = "Random Forest",
+#Precision     = NA, 
+#Sensibilidad  = NA, 
+#Especificidad = NA, 
+#F1_Score      = NA
+#)
+
+#modelo_otro <- c(
+#  Modelo        = "KNN / Otro",  # Cambiar por el nombre real
+#  Precision     = NA, 
+#  Sensibilidad  = NA, 
+#  Especificidad = NA, 
+#  F1_Score      = NA
+#)
+
+#Unir todo en un solo Dataframe
+#tabla_comparativa <- rbind(modelo_svm, modelo_rf, modelo_otro)
+#tabla_comparativa <- as.data.frame(tabla_comparativa)
+tabla_comparativa <- as.data.frame(modelo_svm)
